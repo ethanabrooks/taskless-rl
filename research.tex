@@ -1,0 +1,59 @@
+\documentclass{article}
+    % General document formatting
+    %\usepackage[margin=0.7in]{geometry}
+    %\usepackage[parfill]{parskip}
+    %\usepackage[utf8]{inputenc}
+    
+    % Related to math
+    \usepackage{amsmath, amssymb}
+    %\usepackage{amsmath,amssymb,amsfonts,amsthm}
+    \DeclareMathOperator*{\argmin}{arg\,min}
+
+\begin{document}
+This document considers a set of Markov decision processes (MDPs), $M_{ij}$, that share common states $S$, actions $A$, and dynamics $P_a$, but that each have distinct reward functions defined as follows:
+\[
+  R_{ij}(S_i) = 
+  \begin{cases}
+    1 & \text{if } s_i = s_j \\ 
+    0 & \text{otherwise} \\ 
+  \end{cases}
+\]
+
+This set of MDPs defines an environment in which the optimal policy for any reward function $R_{ij}$ is the most efficient way to transition between $s_i$ and $s_j$ given the dynamics of the environment. Our objective is to determine the most efficient way to simulataneously learn all of these policies. We propose learning a universal value function $V_{ij}(s)$ defined as follows:
+\[ 
+V_{ij}(s) = 
+  \begin{cases}
+    R_{ij}(s_j) & \text{if } s = s_j \\ 
+    R_{ij}(s) + \mathbb{E}_{s' \sim P_{\pi_{ij}(s)}}\left [ V_{ij}(s') \right ] & \text{otherwise}
+  \end{cases}
+\]
+
+where $\pi_{ij}$ is the optimal policy for the MDP with reward function $R_{ij}$. Given some parametrized approximation $\hat{V}_\theta$ of $V$ and some measure $\mathcal{L}_{s,i,j}(\theta)$ of the error in $\hat{V}_{\theta,i,j}(s)$, we define the global error of $\hat{V}$ as:
+\[
+   \mathcal{L}(\theta) = \sum_{s_1 \in S}\sum_{s_2 \in S}\mathcal{L}_{s_1,s_2}(\theta)
+\]
+where
+\[
+   \mathcal{L}_{s_i, s_j}(\theta) = \mathcal{L}_{s_i,i,j}(\theta)
+\]
+
+
+Now suppose that we are using some gradient-based scheme of optimizing $\hat{V}$. Since 
+\[
+  \Delta \mathcal{L} = \lim_{|\Delta \theta| \to 0}\Delta \theta \cdot \mathcal{L}'(\theta)
+\]
+it follows that
+\[
+  \argmin \left[ \Delta \mathcal{L} \right] = \lim_{|\Delta \theta| \to 0}\argmin \left[ \Delta \theta \cdot \mathcal{L}'(\theta) \right]
+\]
+Of course, the value that satisfies this equation is some negative scaling of the gradient: $c\mathcal{L}'(\theta), c \to 0^-$. A common approach to this kind of problem is approximation by sampling:
+\[
+  \Delta \theta = \sum_{s_1 \in B_1}\sum_{s_2 \in B_2}\mathcal{L}_{s_1,s_2}'(\theta)
+\]
+
+In practical settings, if $S$ is very large, it may be necessary to place some limit on the number of states in $(B_1, B_2)$. Moreover, it may be impossible to visit an arbitrary state $s$, and instead it may be necessary to navigate to $s$ from some given starting state $s_0$. Given these observations and constraints, we wish to learn a policy $\pi$ that terminates after $n < |S|$ steps and maximizes the following reward function:
+\[
+	R(s) = 
+\]
+%That is, the $\Delta \theta$ that contributes most to the diminution of $\mathcal{L}$ will be approximately collinear with
+\end{document}
