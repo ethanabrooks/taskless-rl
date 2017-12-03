@@ -5,7 +5,7 @@
     %\usepackage[utf8]{inputenc}
     
     % Related to math
-    \usepackage{amsmath, amssymb}
+    \usepackage{amsmath, amssymb, bm}
     %\usepackage{amsmath,amssymb,amsfonts,amsthm}
     \DeclareMathOperator*{\argmin}{arg\,min}
 
@@ -15,14 +15,14 @@ A Markov Decision Process (MDP) is defined by the following properties: a set of
   V^\pi(s) = R(s) +
   \begin{cases}
     0 & \text{if $s$ is terminal}\\ 
-    \gamma \mathbb{E}_{s' \sim \mathbf{P}_\pi} \left[ V^\pi(s') \right] & \text{otherwise} \\ 
+    \gamma \mathbb{E}_{s' \sim \bm{P}_\pi} \left[ V^\pi(s') \right] & \text{otherwise} \\ 
   \end{cases}
 \]
 
 where $\gamma \in (0, 1)$ and
 
 \[
-  \mathbf{P}_\pi = 
+  \bm{P}_\pi = 
   \begin{cases}
     P_{\pi(s)}(s) & \text{if $\pi$ is deterministic} \\
     \mathbb{E}_{a \sim \pi(s)}\left[ P_a(s) \right] & \text{if $\pi$ is stochastic} \\
@@ -31,7 +31,7 @@ where $\gamma \in (0, 1)$ and
 
 Reinforcement learning studies algorithms for efficiently learning policies that maximize $V^\pi(s_0)$ where $s_0$ is some given start state. Current research focuses on learning the optimal policy for individual MDPs. However, a \textit{generally} intelligent agent must learn many MDPs simulateously, all sharing common states, dynamics, and actions, but parametrized by diverse reward functions. This corresponds to the intuition that animals and especially human beings learn to perform a wide range of tasks while the laws of physics and the range of muscle movements remain relatively constant. Moreover, these creatures do not postpone learning until pressed by nature and circumstance. One therefore observes small children exploring their environments with no motive but discovery.
 
-This research attempts to formalize a system for learning in the absence of a specific reward. A value function is determined by reward and dynamics. An optimal policy is determined by the value function. Therefore, while an agent cannot learn an optimal policy in the absence of a reward function, it can learn dynamics and that is half the battle. 
+This research attempts to formalize a system for learning in the absence of a specific reward. While an agent cannot learn an optimal policy in the absence of a reward function, it can learn dynamics and that is half the battle. 
 
 A supplementary line of inquiry is the learning of a \textit{universal} value function that measures the probability of transitioning between arbitrary pairs of states:
 
@@ -39,38 +39,70 @@ A supplementary line of inquiry is the learning of a \textit{universal} value fu
 V_{g}^\pi(s) = 
   \begin{cases}
     1 & \text{if } s = g \\ 
-    \mathbb{E}_{s' \sim \mathbf{P}_{\pi}}\left [ V_{g}^\pi(s') \right ] & \text{otherwise}
+    \mathbb{E}_{s' \sim \bm{P}_{\pi}}\left [ V_{g}^\pi(s') \right ] & \text{otherwise}
   \end{cases}
 \]
 
-Given $\pi$, $V_{g}^\pi$ is entirely determined by the transition function $P_a$. Moreover, $P_a$ is a special case of $V_{g}^\pi$ in which $\pi$ is restricted to policies that terminate after a single step. Finally we observe that if $\pi$ is $V_{g}^\pi(s)$ expresses the probability that 
+Given $\pi$, $V_{g}^\pi$ is entirely determined by the transition function $P_a$. Now, consider the following variation of $V_g^\pi$:
 
-Therefore, if one learns the transition dynamics of an environment, all that remains to learn the optimal policy is the reward function, which is often easy to learn. It is therefore our contention that a great deal of useful information can be learned in an environment before a specific reward function is introduced. 
-
-If it were possible to 
-
-
-
-
-This document considers a set of Markov decision processes (MDPs), $M_{ij}$, that share common states $S$, actions $A$, and dynamics $P_a$, but that each have distinct reward functions defined as follows:
 \[
-  R_{ij}(S_i) = 
+V_{g, n}^\pi(s) = 
+	\begin{cases}
+		0 & \text{if } n = 0 \\ 
+		1 & \text{if } s = g \\ 
+		\mathbb{E}_{s' \sim \bm{P}_{\pi}}\left [ V_{g, n-1}^\pi(s') \right ] & \text{otherwise}
+	\end{cases}
+\]
+
+That is, $\pi$ terminates if it fails to reach $g$ within $n$ steps. Observe that $V_{g, n}^\pi(s)$ expresses the probability that $\pi$ reaches $g$, or more precisely, the probability that $g$ is among states $\bm{\tau}(s)$ that follow $s$:
+
+\[ 
+P\left(g \in \bm{\tau}(s)\right) =
+\begin{cases}
+    0 & \text{if } \bm{\tau}(s) = \emptyset \\ 
+    1 & \text{if } s = g \\ 
+    \mathbb{E}_{s' \sim \bm{P}_{\pi}}\left[ P \left( g \in \bm{\tau}(s') \right) \right] & \text{otherwise}
+\end{cases}
+\]
+
+And by induction, 
+\[
+\mathbb{E}_{s' \sim \bm{P}_{\pi}}\left[ P \left( g \in \bm{\tau}(s') \right) \right] = \mathbb{E}_{s' \sim \bm{P}_{\pi}}\left[ V_{g, n-1}^\pi(s') \right]
+\]
+
+Note that $P_a(s) = V_{g, 1}^\pi(s)$ when $\pi(s) = a$. Thus universal value functions are a generalization from single-step to multi-step dynamics.
+
+In light of these consideration, we define a set of Markov decision processes (MDPs), $M_{g}$, that share common states $S$, actions $A$, and dynamics $P_a$, but that each have distinct reward functions defined as follows:
+\[
+  R_{g}(s) = 
   \begin{cases}
-    1 & \text{if } s_i = s_j \\ 
+    1 & \text{if } s = g \\ 
     0 & \text{otherwise} \\ 
   \end{cases}
 \]
 
-This set of MDPs defines an environment in which the optimal policy for any reward function $R_{ij}$ is the most efficient way to transition between $s_i$ and $s_j$ given the dynamics of the environment. Our objective is to determine the most efficient way to simulataneously learn all of these policies. We propose learning a universal value function $V_{ij}(s)$ defined as follows:
-\[ 
-V_{ij}(s) = 
-  \begin{cases}
-    R_{ij}(s_j) & \text{if } s = s_j \\ 
-    R_{ij}(s) + \mathbb{E}_{s' \sim P_{\pi_{ij}(s)}}\left [ V_{ij}(s') \right ] & \text{otherwise}
-  \end{cases}
+This set of MDPs defines an environment in which the optimal policy for any reward function $R_{g}$ is the policy that maximizes $V_g(s)$, as previously defined, that is, the policy that most efficiently transitions between $s$ and $g$.
+
+Now suppose we have some learned approximation $\hat{V}_{g}^\pi(s, \theta)$ of $V_{g}^\pi(s)$. In general, the suboptimality of any policy executed according to $\hat{V}$ will be a function of the approximation error. If we simply use square error to measure the approximation error, we have
+
+\[
+   \mathcal{L}_{V_g(s)}(\theta) = {({V_g^\pi(s) - \hat{V}_{g}^{\hat{\pi}}(s, \theta)})}^2
 \]
 
-where $\pi_{ij}$ is the optimal policy for the MDP with reward function $R_{ij}$. Given some parametrized approximation $\hat{V}_{ij}^{\theta}(s)$ of $V_{ij}(s)$ and some measure $\mathcal{L}_{ij}^s(\theta)$ of the error in $\hat{V}_{ij}^{\theta}(s)$, we define the global error of $\hat{V}$ as:
+\section{To Do}
+\begin{itemize}
+\item We need an expression of $\mathcal{L}$ that enables us to state the contribution of each transition to it.
+\item We need to figure out properties of this loss that enable us to minimize it most efficiently.
+\end{itemize}
+
+\section{Rough}
+
+\begin{align}
+   \mathcal{L}_{V_g(g)}(\theta) &= 0 \\
+   \mathcal{L}_{V_g(s)}(\theta) &= {({\mathbb{E}_{s' \sim \bm{\hat{P}}(s)} {[{\hat{V}(s')}]}} - {\mathbb{E}_{s' \sim \bm{P}(s)} {[{V(s')}]}})}^2
+ \end{align}
+
+Given some parametrized approximation $\hat{V}_{ij}^{\theta}(s)$ of $V_{ij}(s)$ and some measure $\mathcal{L}_{ij}^s(\theta)$ of the error in $\hat{V}_{ij}^{\theta}(s)$, we define the global error of $\hat{V}$ as:
 \[
    \mathcal{L}(\theta) = \sum_{s_1 \in S}\sum_{s_2 \in S}\mathcal{L}_{s_1,s_2}(\theta)
 \text{, where }
