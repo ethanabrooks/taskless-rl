@@ -19,7 +19,7 @@ A Markov Decision Process (MDP) is defined by the following properties: a set of
   \end{cases}
 \]
 
-where $\gamma \in (0, 1)$ and
+where $\gamma \in (0, 1]$ and % chktex 9
 
 \[
   \bm{P}_\pi = 
@@ -72,7 +72,7 @@ And by induction,
 
 Note that $P_a(s) = V_{g, 1}^\pi(s)$ when $\pi(s) = a$. Thus universal value functions are a generalization from single-step to multi-step dynamics.
 
-In light of these consideration, we define a set of Markov decision processes (MDPs), $M_{g}$, that share common states $S$, actions $A$, and dynamics $P_a$, but that each have distinct reward functions defined as follows:
+In light of these consideration, we define a set $M_{g}$ of MDPs that share common states $S$, actions $A$, and dynamics $P_a$, but that each have distinct reward functions defined as follows:
 \[
   R_{g}(s) = 
   \begin{cases}
@@ -88,6 +88,24 @@ Now suppose we have some learned approximation $\hat{V}_{g}^\pi(s, \theta)$ of $
 \[
    \mathcal{L}_{V_g(s)}(\theta) = {({V_g^\pi(s) - \hat{V}_{g}^{\hat{\pi}}(s, \theta)})}^2
 \]
+
+\ldots 
+\vspace{5mm}
+
+Now suppose that we are using some gradient-based scheme of optimizing $\hat{V}$. Since 
+\[
+  \Delta \mathcal{L} = \lim_{|\Delta \theta| \to 0}\Delta \theta \cdot \mathcal{L}'(\theta)
+\]
+it follows that
+\[
+  \argmin \left[ \Delta \mathcal{L} \right] = \lim_{|\Delta \theta| \to 0}\argmin \left[ \Delta \theta \cdot \mathcal{L}'(\theta) \right]
+\]
+Of course, the value that satisfies this equation is some negative scaling of the gradient: $c\mathcal{L}'(\theta), c \to 0^-$. A common approach to this kind of problem is approximation by sampling:
+\[
+  \Delta \theta \leftarrow c\sum_{s \in B}\mathcal{L}_s'(\theta) \simeq c\mathcal{L}'(\theta)
+\]
+
+In practical settings, if $S$ is very large, it may be necessary to place some limit on the size of $B$. Moreover, it may be impossible to visit an arbitrary state $s$, and instead it may be necessary to navigate to $s$ from some given starting state $s_0$. Given these constraints, we wish to learn a policy $\pi$ that terminates after $n < |S|$ steps and visits those states that contribute most to the diminution of $\mathcal{L}$.
 
 \section{To Do}
 \begin{itemize}
@@ -137,4 +155,4 @@ In practical settings, if $S$ is very large, it may be necessary to place some l
 	R(s) = 
 \]
 %That is, the $\Delta \theta$ that contributes most to the diminution of $\mathcal{L}$ will be approximately collinear with
-\end{document}
+\end{document} % chktex 17
